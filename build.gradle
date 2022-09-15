@@ -1,0 +1,120 @@
+plugins {
+  id 'org.springframework.boot' version '2.6.1'
+  id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+  id 'com.vaadin' version '0.14.8.1'
+  id 'java'
+  id 'eclipse'
+  id 'signing'
+  id 'maven-publish'
+  id "com.gorylenko.gradle-git-properties" version "2.4.0"
+  id "nebula.ospackage-docker-base" version "9.0.0"
+  id "com.palantir.docker" version "0.32.0"
+  id 'jacoco'
+}
+
+group = 'net.rossonet'
+version = 0.1
+sourceCompatibility = '1.8'
+
+repositories {
+  mavenCentral()
+  maven {
+    url "https://maven.vaadin.com/vaadin-addons"
+  }
+}
+
+dependencyManagement {
+  imports {
+    mavenBom "com.vaadin:vaadin-bom:14.8.11"
+    mavenBom "org.keycloak.bom:keycloak-adapter-bom:19.0.1"
+  }
+}
+
+task buildDocker() {
+  buildDocker.dependsOn("bootJar")	
+  buildDocker.finalizedBy("docker")
+}
+
+vaadin {
+  optimizeBundle = true
+  pnpmEnable = true
+  productionMode = true
+  nodeVersion = "v18.3.0"
+  runNpmInstall = true
+  nodeDownloadRoot = "https://nodejs.org/dist/"
+}
+
+bootJar.configure {
+  dependsOn vaadinPrepareFrontend
+  dependsOn vaadinBuildFrontend
+}
+
+bootRun.configure {
+  dependsOn vaadinPrepareFrontend
+  dependsOn vaadinBuildFrontend
+}
+
+
+docker {
+  name "rossonet.net/rossonet-console:latest"
+  dockerfile file('Dockerfile.gradle')
+  files "$buildDir/libs/rossonet-console-${version}.jar"
+}
+
+
+dependencies {
+  implementation 'org.springframework.boot:spring-boot-starter-security'
+  implementation 'org.springframework.boot:spring-boot-starter-web'
+  implementation 'org.keycloak:keycloak-spring-boot-starter'
+  implementation 'com.vaadin:vaadin-spring-boot-starter'
+  implementation group: 'com.vaadin', name: 'vaadin-material-theme'
+  implementation group: 'com.vaadin', name: 'vaadin-icons-flow'
+  implementation group: 'com.vaadin', name: 'vaadin-grid-flow'
+  implementation group: 'com.vaadin', name: 'vaadin-app-layout-flow'
+  implementation group: 'com.vaadin', name: 'vaadin-split-layout-flow'
+  implementation group: 'com.vaadin', name: 'flow-client'
+  implementation group: 'com.vaadin', name: 'vaadin-upload-flow'
+  implementation 'com.flowingcode.addons:xterm-console:1.0.2'
+  implementation 'org.springframework.session:spring-session-core'
+  implementation("org.springframework.boot:spring-boot-devtools")
+  testImplementation ('org.springframework.boot:spring-boot-starter-test'){
+	  exclude group:"com.vaadin.external.google", module: "android-json"
+  }
+  testImplementation 'org.springframework.security:spring-security-test'
+}
+
+test {
+  useJUnitPlatform()
+}
+
+eclipse {
+  classpath {
+    downloadJavadoc = true
+    downloadSources = true
+  }
+}
+
+java {
+  withJavadocJar()
+  withSourcesJar()
+}
+
+gitProperties {
+  failOnNoGitDirectory = false
+  customProperty 'component', "${project.name}"
+  customProperty 'version', "${version}"
+  dateFormat = "yyyy-MM-dd HH:mm:ssZ"
+  dateFormatTimeZone = 'GMT'
+}
+
+jacocoTestReport {
+  reports {
+    xml.enabled true
+    html.enabled false
+  }
+}
+
+javadoc{
+  destinationDir = file("${rootProject.buildDir}/docs/javadoc/${project.name}/")
+  failOnError=true
+}
