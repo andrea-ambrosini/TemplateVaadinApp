@@ -121,17 +121,17 @@ javadoc{
 
 task theiaIdeBackend(type: Exec) {
         workingDir "./"
-        commandLine 'docker', 'run', '--init', '-p', '3000:3000', '-d', '-v', "${projectDir}:/home/project:cached", 'rossonet/theia-ide:latest'
+        commandLine 'docker', 'run', '--init', '--rm', '-p', '3000:3000', '-d', '-v', "${projectDir}:/home/project:cached", 'rossonet/theia-ide:latest'
 }
 
 task theiaIdeBackendNoCached(type: Exec) {
         workingDir "./"
-        commandLine 'docker', 'run', '--init', '-p', '3000:3000', '-d', '-v', "${projectDir}:/home/project", 'rossonet/theia-ide:latest'
+        commandLine 'docker', 'run', '--init', '--rm', '-p', '3000:3000', '-d', '-v', "${projectDir}:/home/project", 'rossonet/theia-ide:latest'
 }
 
 task theiaIdeBackendNoVolume(type: Exec) {
         workingDir "./"
-        commandLine 'docker', 'run', '--init', '-p', '3000:3000', '-d', '--name', "docker-ide-${project.name}", 'rossonet/theia-ide:latest'
+        commandLine 'docker', 'run', '--init', '--rm', '-p', '3000:3000', '-d', '--name', "docker-ide-${project.name}", 'rossonet/theia-ide:latest'
 }
 
 task theiaIdeBackendCopy(type: Exec) {
